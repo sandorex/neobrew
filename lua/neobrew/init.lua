@@ -10,10 +10,6 @@ function M.init(options)
 
     M.ensure_installed = options.ensure_installed or {}
 
-    if M.ensure_installed ~= nil and next(M.ensure_installed) ~= nil then
-        M.homebrew_install(M.ensure_installed)
-    end
-
     -- prepend to PATH
     vim.env.PATH = M.homebrew_bin_path .. ":" .. vim.env.PATH
 end
@@ -32,13 +28,22 @@ vim.api.nvim_create_user_command("HomebrewSetup", function()
 end, {})
 
 function M.homebrew_install(pkgs)
+    if (pkgs == nil or #pkgs == 0) then
+        if M.ensure_installed ~= nil and #M.ensure_installed > 0 then
+            M.homebrew_install(M.ensure_installed)
+        end
+
+        -- ensure_installed is empty and no pkgs provided so do nothing
+        return
+    end
+
     M.terminal_run(M.brew_exe_path .. " install " .. table.concat(pkgs, " "))
 end
 
 vim.api.nvim_create_user_command("HomebrewInstall", function(args)
     -- wrapper so lua api is not awkward
     M.homebrew_install(args.fargs)
-end, { nargs = '+' })
+end, { nargs = '*' })
 
 vim.api.nvim_create_user_command("HomebrewUpgrade", function()
     M.terminal_run(M.brew_exe_path .. " upgrade")
